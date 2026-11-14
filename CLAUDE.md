@@ -17,12 +17,23 @@ Each stage is a separate Tdarr flow imported via its `.yml` file (JSON format de
 | File | Stage | Purpose |
 |------|-------|---------|
 | `1 - Input.yml` | Input | Entry point — defines all flow variables, tags files for special processing (deinterlace, lossless detection) |
-| `2 - Prep.yml` | Prep | Standardizes container to MKV, removes problematic codecs/streams |
-| `3 - Audio.yml` | Audio | Detects lossless audio, strips unwanted tracks, encodes to Opus |
+| `2 - Prep.yml` | Prep | Standardizes container to **MP4** (MKV kept as the retry1 fallback), removes problematic codecs/streams |
+| `3 - Audio.yml` | Audio | Detects lossless audio, strips unwanted tracks, encodes to **AAC** |
 | `4 - Video.yml` | Video | Main transcoding — resolution detection, bitrate/CQ calculations, encoder branching |
 | `5 - Save.yml` | Save | Final validation, moves to `output_dir_done` or `output_dir_review`, cleans source if not in test_mode |
 
 Flows chain together via `goToFlow` plugin references. Data passes between stages through Tdarr's flow variable and file metadata systems.
+
+### Output Defaults (MP4 + HEVC + AAC)
+
+This fork changed the upstream defaults. Everything the pipeline produces is an `.mp4` with HEVC video and AAC audio:
+
+- **Container:** `2 - Prep.yml` sets `ffmpegCommandSetContainer` to `container: mp4` (`forceConform: false`) on the main path — nodes `mqGBwbA97` (default), `b0UHzJuch` (mkv fallback), `7PuSG3-6D` (mkv + forceConform, last resort). Every ffmpeg step after that only copies/remuxes inside the chosen container, so the cache file (and the saved output extension) is `.mp4`.
+- **Video:** unchanged from upstream — all encoder branches are HEVC (`hevc_nvenc/qsv/amf/vaapi`, `libx265`).
+- **Audio:** `3 - Audio.yml` encodes with ffmpeg's native `aac` encoder (`-c:v copy -c:a:0 aac -b:a {{{args.variables.bitrate_audio_N}}} -ac N`), replacing `libopus` (and its `-mapping_family 1` 8-channel hack). The post-encode check (`checkAudioCodec`) requires `aac`, and the `MichPasCleanSubsAndAudioCodecs` cleanup lists the codecs to *remove* — everything except `aac` (so `opus` is now in that list).
+- **`1 - Input.yml`** skip gate detects an already-processed Dolby Vision file by "every audio track is `aac`" (was `opus`), and `fl_reorder_streams_codec` now lists `aac` ahead of `opus` so an AAC track outranks a legacy Opus one.
+- **Prep retry ladder is inverted** vs upstream (upstream: mkv default → mp4 fallback). Now: default mp4 remux fails → retry1 sets the container back to **mkv** (`b0UHzJuch`, keeps bitmap subs and DTS/TrueHD that mp4 refuses) → retry2 extracts subtitles to sidecars (`copyMoveFolderContent` into `output_dir_done`) and re-runs the normal mp4 command → retry3 a bare `-c copy` remux (`Kc5D-yATu`, main mp4 container) → retry4 `-video_track_timescale 90000` on the mp4 command → retry5 mkv + `forceConform` (`7PuSG3-6D`, strips the offending streams) → retry6 `failFlow`. The retry tags (`retry1`…`retry5`), `setOriginalFile` resets and `resetFlowError` wiring are unchanged; only which container each rung selects and the comment nodes explaining the ladder moved.
+- mkv-only maintenance steps stay keyed on the `.mkv` extension (`checkFileExtension` / the "working file is a cache mkv?" customFunctions), so with the mp4 default they no-op and still work for files that fell back to mkv.
 
 ### JavaScript Plugins (`plugins/`)
 
@@ -56,7 +67,7 @@ Flow 1 sets encoder-specific parameters. Supported encoders: `nvenc` (NVIDIA), `
 | `v_cq` | CQ quality fallback (0–51) |
 | `bitrate_480p/576p/720p/1080p/1440p/4k/4k_hdr` | Target bitrates per resolution |
 | `do_audio_clean` | `true`/`false` — strip unwanted audio tracks |
-| `do_audio_encode` | `true`/`false` — encode audio to Opus |
+| `do_audio_encode` | `true`/`false` — encode audio to AAC |
 | `bitrate_audio` | Per-channel audio bitrate |
 | `bitrate_audio_cutoff` | Minimum audio bitrate threshold |
 | `audio_language` | Comma-separated language codes (e.g. `eng,und`) |
@@ -86,7 +97,7 @@ Flow 1 sets encoder-specific parameters. Supported encoders: `nvenc` (NVIDIA), `
 
 ## Default Tracks
 
-Both the Save flow (before saving) and the Input flow (files the replace-mode skip gate doesn't encode) set default track flags with `mkvpropedit`, header-only: the best non-commentary audio in `default_track_language` becomes the default with no default subtitle (forced flags are kept); when the default audio is explicitly in another language, the full (non-SDH) subtitle in the preferred language becomes the default. It has to run after the last ffmpeg step, because ffmpeg's mkv muxer marks forced subtitles as default on a plain `-c copy` remux. Tracks are addressed by track number (`track:@N`): 64-bit track UIDs lose precision in JavaScript's `JSON.parse`.
+Both the Save flow (before saving) and the Input flow (files the replace-mode skip gate doesn't encode) set default track flags with `mkvpropedit`, header-only: the best non-commentary audio in `default_track_language` becomes the default with no default subtitle (forced flags are kept); when the default audio is explicitly in another language, the full (non-SDH) subtitle in the preferred language becomes the default. It has to run after the last ffmpeg step, because ffmpeg's mkv muxer marks forced subtitles as default on a plain `-c copy` remux. Tracks are addressed by track number (`track:@N`): 64-bit track UIDs lose precision in JavaScript's `JSON.parse`. `mkvpropedit` is Matroska-only and both fixes guard on a `.mkv` path, so with the mp4 default they log "not an mkv, skipping" and do nothing; there is no mp4 equivalent implemented.
 
 ## Max Resolution
 
@@ -97,4 +108,5 @@ Both the Save flow (before saving) and the Input flow (files the replace-mode sk
 - Dolby Vision video is never re-encoded: the Input skip gate sets `dv_skip_video` and the Video flow sends the file straight to Save with the video stream-copied (audio cleanup and default tracks still run).
 - Does **not** support re-encoding HDR10+ content.
 - 720p `.ts` files may produce unexpected bitrates.
+- With the mp4 default, mp4-incompatible streams (bitmap subtitles such as pgs/vobsub, DTS/TrueHD audio) cannot be kept: the file either falls back to an mkv container (Prep retry1) or has its subtitles exported to `.srt` sidecars (retry2). Outputs therefore carry text subtitles only.
 - Tdarr may cache old variable values after updates — clearing the library cache resolves this.

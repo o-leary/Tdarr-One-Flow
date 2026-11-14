@@ -19,7 +19,8 @@ I have a library for low quality, high quality, Animation, Movies.  Each has the
 - Extensive logging and use of icons to make tracking down failures a breeze
 - Works with Nvidia, Intel QuickSync and CPU (Help me add others by sharing your ffmpeg command)
 - Strip audio to where only the tracks you want remain
-- If a lossless audio track exists, encode in opus (can disable, still needs refinement, as sometimes encodes high bitrate non-lossless tracks)
+- If a lossless audio track exists, encode it in AAC (can disable, still needs refinement, as sometimes encodes high bitrate non-lossless tracks)
+- Everything leaves the pipeline as an `.mp4` with HEVC video and AAC audio, the combination that direct-plays most widely (Plex/Jellyfin, phones, smart TVs, browsers). If mp4 cannot carry something (bitmap subtitles, DTS/TrueHD audio), that file falls back to an mkv container instead
 - Deinterlace .ts files. (tv DVR broadcasts)
 - Export Embedded Subtitles (Could use more testing and refinement)
 - Maximum output resolution (`v_max_resolution`), e.g. store 4K releases as 1080p: sources above it are downscaled, and the bitrate follows the target resolution's setting (see Maximum Resolution below)
@@ -34,9 +35,9 @@ I broke it down into 5 steps/flows:
 
 1 - Input (Define Flow Variables & Configurables.  Tags files that may need special processing down the stack)
 
-2 - Prep (Standardizes the File so it is less likely to fail encoding later)
+2 - Prep (Standardizes the File so it is less likely to fail encoding later — container default is `.mp4`)
 
-3 - Audio (Clean audio and encode to Opus, if enabled)
+3 - Audio (Clean audio and encode to AAC, if enabled)
 
 4 - Video (Define desired bitrate by resolution, fall back on cq)
 
@@ -57,6 +58,7 @@ I broke it down into 5 steps/flows:
 # Known Limitations
   - Dolby Vision video is copied, never re-encoded, so those files only shrink as much as audio cleanup allows.  HDR10+ is skipped as HEVC by default; with `do_hevc = true` it would be re-encoded and lose its HDR10+ metadata.
   - .ts files in 720p often end up with an unexpected bitrate.  Have not been able to figure out why yet.
+  - The default output container is `.mp4`, so bitmap subtitles (pgs, vobsub, dvd subs) and DTS/TrueHD audio cannot be kept in it: those files either fall back to an `.mkv` container (retry1 in flow 2) or have their subtitles exported to `.srt` sidecars. The `mkvpropedit` default-track fix is mkv-only, so mp4 outputs skip it (see Container and Codec Defaults).
 
 # Replace-in-place Mode (added in this fork)
 The original Tdarr-One-Flow only works as a pipeline: files go in an input folder, get encoded, and come out in an output folder before they are moved into your library. That only helps with new downloads. This fork adds a replace mode so Tdarr can be pointed at an **existing media library** and shrink what is already there, file by file, without moving anything around.
@@ -100,8 +102,25 @@ Things to know:
 
 The job log shows the decision, e.g. `Bit depth: source=8, min=10, raising to 10`.
 
+# Container and Codec Defaults: MP4 + HEVC + AAC (changed in this fork)
+Upstream One-Flow standardises on `.mkv` with Opus audio. This fork defaults to the combination that direct-plays almost everywhere: **`.mp4` container, HEVC video, AAC audio**.
+
+- **Container:** flow 2 remuxes every file into `.mp4` first, so the audio and video steps only ever copy streams inside an mp4 and the finished file is `.mp4`.
+- **Video:** already HEVC by default in the upstream flow — every encoder branch uses `hevc_nvenc` / `hevc_qsv` / `hevc_amf` / `hevc_vaapi` / `libx265` (`do_hevc = true` also re-encodes HEVC sources; the Input skip gate still leaves HEVC/AV1 alone in replace mode).
+- **Audio:** flow 3 encodes with ffmpeg's native AAC encoder, at your per-channel `bitrate_audio` (`-c:a:0 aac -b:a <bitrate_audio × channels> -ac <channels>`), replacing `libopus`. The verification node that used to require an Opus track after an encode now requires an AAC one, and the "remove all other audio" step now removes everything *except* AAC (Opus added to its removal list).
+
+**When mp4 cannot carry the file**, the retry ladder in flow 2 runs in the opposite direction to upstream: mp4 remux fails → retry1 repeats the same remux in an **mkv** container (which keeps bitmap subtitles such as pgs/vobsub and DTS/TrueHD audio) → still failing → retry2 extracts the subtitles to sidecars and moves them next to the output, then re-runs the normal mp4 remux → retry3 tries a bare `-c copy` remux into mp4 with none of the other prep edits → retry4 forces a 90000 video timescale → retry5 remuxes with force-conform into mkv (which strips the problem streams) → retry6 fails the job and leaves the original untouched. Files that end up in mkv still get the mkv-only maintenance steps (statistics refresh, default-track flags).
+
+**Upgrading a library that was built with mkv/Opus defaults:** the replace-mode skip gate recognises a finished file by "all audio tracks are AAC", so old Dolby Vision files with Opus audio get one pass (remux + audio re-encode) before they are skipped again. Ordinary files are not detected by container, and the flow does not rewrite an already-HEVC file just to change its container.
+
+**Two mp4 caveats:**
+- Subtitles in the output are limited to what mp4 accepts (text-based: SRT/ASS, and mov_text after extraction). Bitmap subtitles (pgs, vobsub, dvd subs) are the usual reason a file falls back to mkv, or get exported to `.srt` sidecars next to the video.
+- The default-track flag fix (see Default Tracks) uses `mkvpropedit`, which only understands Matroska. With the mp4 default the fix is skipped; the flow does not attempt an equivalent for mp4.
+
+**AAC bitrate guidance:** the flow uses ffmpeg's **native** `aac` encoder (`libfdk_aac` is not in most ffmpeg builds). It treats `-b:a` as a budget: it spends bits up to its psychoacoustic quality ceiling and then stops, so the real bitrate does not track the budget the way Opus or fdk did. Measured on ffmpeg 9 with a 6-channel stream: 384k budget → about 134k out, 640k → about 195k, 960k (160k per channel) → about 203k, 1536k (256k per channel) → about 203k, i.e. past roughly 100-130k per channel extra budget buys nothing. So `bitrate_audio = 128k`-`160k` per channel is already at (or past) the point where the encoder plateaus, and the upstream examples of 256k per channel only produce a bigger file, not a better one. You cannot make the native encoder output a true 5.1 AAC at 1500k, and you do not need one.
+
 # Default Tracks
-Every file that goes through the flow gets its default flags fixed with `mkvpropedit` (header only, no remux, takes about a second). The preferred language is set per library with `default_track_language`; English is used when it isn't set. Below, "your language" means that setting:
+Every file that goes through the flow gets its default flags fixed with `mkvpropedit` (header only, no remux, takes about a second). The preferred language is set per library with `default_track_language`; English is used when it isn't set. **Because `mkvpropedit` only understands Matroska, this fix runs on mkv files (the fallback container and older mkv libraries); files saved as mp4 — the default now — skip it and are logged as "not an mkv, skipping".** Below, "your language" means that setting:
 - The best audio track in your language (most channels, not commentary or descriptive) becomes the only default audio, and no subtitle is default. Forced flags are kept, so players still show forced subtitles when needed.
 - If the file has no audio in your language and its default audio is in another language (a foreign film), that audio stays the default and the full subtitle in your language (not SDH or forced) becomes the default. If there is no subtitle in your language either, subtitle flags are left alone.
 - An original is never edited in place if it lives under, or is hard-linked into, `protect_hardlinks_root` (default `/media/downloads`), so seeding torrents are never modified.
@@ -126,7 +145,7 @@ Different libraries can use different languages, e.g. an English TV library and 
 Library variables you need to add, with example setting:
 
 # Variable Notes:
-Audio bitrates and cutoff are set PER CHANNEL.  We use that to calculate based on number of channels in the audio stream.
+Audio bitrates and cutoff are set PER CHANNEL.  We use that to calculate based on number of channels in the audio stream.  The encode target is AAC (ffmpeg's native encoder), so `bitrate_audio 160k` on a 5.1 track sets a 960k budget - the encoder caps out around 200k for that stream rather than using the whole budget.  128k-160k per channel is already at the plateau; see Container and Codec Defaults.
 
 # Required Fields
 ```
@@ -154,9 +173,9 @@ bitrate_4k_hdr 12500k
 
 do_audio_clean - true - Remove Commentary Audio, Remove Languages not listed in "audio_language", Keep only the Audio Track with Highest Channel Count
 
-do_audio_encode - true - Encode 1st Audio track to Opus
+do_audio_encode - true - Encode 1st Audio track to AAC
 
-bitrate_audio 160k # Output audio bitrate we will encode to.  This is PER CHANNEL.
+bitrate_audio 160k # Output audio bitrate we will encode to (AAC).  This is PER CHANNEL.
 
 bitrate_audio_cutoff 192k # will not encode if source audio bitrate is under this value.  This is PER CHANNEL
 
@@ -293,6 +312,7 @@ Changelog:
 
 Fork changes (amlucent/Tdarr-One-Flow)
 
+ - **Defaults changed to `.mp4` + HEVC + AAC**: flow 2 now remuxes to mp4 first (mkv moved to retry1 as the fallback for bitmap subs / DTS-TrueHD sources, force-conform stays last), and flow 3 encodes audio with the native AAC encoder instead of `libopus`. Audio verification, the "keep one codec" cleanup step and the replace-mode skip gate now key off AAC. See Container and Codec Defaults
  - Added v_max_resolution (downscale above a maximum resolution, bitrate follows the target tier) and v_max_bitdepth, with a combined scale + deinterlace filter chain
  - Resolution and bit depth fall back to ffprobe when MediaInfo data is empty (previously every file landed on the 480p bitrate tier and HDR was encoded as 8-bit)
  - Added replace-in-place mode (save_mode = replace) with atomic replace, Sonarr/Radarr rescan/rename, and a skip gate for HEVC/AV1 and low-bitrate sources

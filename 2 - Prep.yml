@@ -21,11 +21,12 @@
       "fpEnabled": true
     },
     {
-      "name": "Prep & Clean - Set Container MKV Force Conform  📼",
+      "name": "Prep & Clean - Set Container MKV Force Conform (Last Resort) 📼",
       "sourceRepo": "Community",
       "pluginName": "ffmpegCommandSetContainer",
       "version": "1.0.0",
       "inputsDB": {
+        "container": "mkv",
         "forceConform": "true"
       },
       "id": "7PuSG3-6D",
@@ -468,7 +469,7 @@
       "fpEnabled": true
     },
     {
-      "name": "Prep & Clean - Found retry2 tag  - Extracting subs didn't help, lets try a clean remux ℹ️",
+      "name": "Prep & Clean - Found retry2 tag  - Extracting subs didn't help, lets try a clean remux into mp4 ℹ️",
       "sourceRepo": "Community",
       "pluginName": "comment",
       "version": "1.0.0",
@@ -524,7 +525,7 @@
       "fpEnabled": true
     },
     {
-      "name": "ℹ️ Failed remux operation\nRetry1 - Try it in mp4\nRetry2 - Try extracting subs\nRetry3 - Try Clean remux\nRetry4 - Force Timescale\nRetry5 - Try using Force Conform on Remux\nRetry6 - Fail\n\n* Forcing Conform Last as it strips Subtitles",
+      "name": "ℹ️ Failed remux operation\nRetry1 - Retry the remux in an mkv container (the default is mp4)\nRetry2 - Try extracting subs\nRetry3 - Try Clean remux\nRetry4 - Force Timescale\nRetry5 - Try using Force Conform on Remux\nRetry6 - Fail\n\n* Forcing Conform Last as it strips Subtitles",
       "sourceRepo": "Community",
       "pluginName": "comment",
       "version": "1.0.0",
@@ -536,7 +537,7 @@
       "fpEnabled": true
     },
     {
-      "name": "Prep & Clean - Found retry1 tag  - mp4 didn't work, lets try extracting subs ℹ️",
+      "name": "Prep & Clean - Found retry1 tag  - mkv fallback didn't work, lets try extracting subs ℹ️",
       "sourceRepo": "Community",
       "pluginName": "comment",
       "version": "1.0.0",
@@ -677,7 +678,7 @@
       "fpEnabled": true
     },
     {
-      "name": "Prep & Clean - retry1 found, let's try mp4 this time  ℹ️",
+      "name": "Prep & Clean - retry1 found, let's fall back to mkv this time  ℹ️",
       "sourceRepo": "Community",
       "pluginName": "comment",
       "version": "1.0.0",
@@ -689,7 +690,7 @@
       "fpEnabled": true
     },
     {
-      "name": "ℹ️ Try to extract mkv incompatible subs",
+      "name": "ℹ️ Try to extract mp4 incompatible subs (pgs/vobsub/dvd subs)",
       "sourceRepo": "Community",
       "pluginName": "comment",
       "version": "1.0.0",
@@ -745,13 +746,13 @@
       "fpEnabled": true
     },
     {
-      "name": "Prep & Clean - Set Container MP4 📼",
+      "name": "Prep & Clean - Set Container MKV Fallback 📼",
       "sourceRepo": "Community",
       "pluginName": "ffmpegCommandSetContainer",
       "version": "1.0.0",
       "inputsDB": {
         "forceConform": "false",
-        "container": "mp4"
+        "container": "mkv"
       },
       "id": "b0UHzJuch",
       "position": {
@@ -946,7 +947,7 @@
       "fpEnabled": true
     },
     {
-      "name": "ℹ️ What's the retry1 & retry2?\nSome subtitles that are mkv incompatible.  If the remux to mkv fails, we simply try again by changing to a mp4 container, to try and save  the subtitles.  If that doesn't work, we send it back through the stack a 2nd time and remove the subtitles.\nThis is not as targeted as I would like.  Need to compile a list of all offending subtitles so we can target them for extraction or removal more efficiently.",
+      "name": "ℹ️ What's the retry1 & retry2?\nThe default container is mp4, and some streams are mp4 incompatible (bitmap subtitles such as pgs/vobsub, or DTS/TrueHD audio that mp4 will not hold). If the remux to mp4 fails we simply try again in an mkv container, which keeps those streams. If that doesn't work either, we send it back through the stack a 2nd time and remove the subtitles.\nThis is not as targeted as I would like. Need to compile a list of all offending streams so we can target them for extraction or removal more efficiently.",
       "sourceRepo": "Community",
       "pluginName": "comment",
       "version": "1.0.0",
@@ -1181,11 +1182,12 @@
       "fpEnabled": true
     },
     {
-      "name": "Prep & Clean - Set Container MKV  📼",
+      "name": "Prep & Clean - Set Container MP4 (Default) 📼",
       "sourceRepo": "Community",
       "pluginName": "ffmpegCommandSetContainer",
       "version": "1.0.0",
       "inputsDB": {
+        "container": "mp4",
         "forceConform": "false"
       },
       "id": "mqGBwbA97",
