@@ -1319,6 +1319,48 @@
         "y": 2220
       },
       "fpEnabled": true
+    },
+    {
+      "name": "Prep & Clean - Remove Data Streams (Force Timescale) 📼",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandRemoveDataStreams",
+      "version": "1.0.0",
+      "inputsDB": {},
+      "id": "-o7wAdjrj",
+      "position": {
+        "x": 1818.5479097789664,
+        "y": 2861.156424321689
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Prep & Clean - Remove Data Streams (Remux) 📼",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandRemoveDataStreams",
+      "version": "1.0.0",
+      "inputsDB": {},
+      "id": "mRxpLXxjP",
+      "position": {
+        "x": 1553.4854145315458,
+        "y": 2796.827699110581
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Prep & Clean - Check Variable is_wmv 🔍",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "{{{args.variables.user.is_wmv}}}",
+        "value": "true"
+      },
+      "id": "u6w70Qe4G",
+      "position": {
+        "x": 1386.227909160514,
+        "y": 1508.6214002099568
+      },
+      "fpEnabled": true
     }
   ],
   "flowEdges": [
@@ -1570,7 +1612,7 @@
     {
       "source": "HOn7BNPij",
       "sourceHandle": "2",
-      "target": "1TKIYv9Fd",
+      "target": "u6w70Qe4G",
       "targetHandle": null,
       "id": "gVFuaJN1C"
     },
@@ -1743,7 +1785,7 @@
       "id": "TtNF-4Ulg"
     },
     {
-      "source": "DrM_l7cfy",
+      "source": "mRxpLXxjP",
       "sourceHandle": "1",
       "target": "Kc5D-yATu",
       "targetHandle": null,
@@ -1785,7 +1827,7 @@
       "id": "cWCLM2Cx9"
     },
     {
-      "source": "Seo9IHIHX",
+      "source": "-o7wAdjrj",
       "sourceHandle": "1",
       "target": "qnVKFGF7o",
       "targetHandle": null,
@@ -2056,6 +2098,34 @@
       "target": "_iFkU1C17",
       "targetHandle": null,
       "id": "86MHCKjY_"
+    },
+    {
+      "source": "Seo9IHIHX",
+      "sourceHandle": "1",
+      "target": "-o7wAdjrj",
+      "targetHandle": null,
+      "id": "mAt6V0Qg3"
+    },
+    {
+      "source": "DrM_l7cfy",
+      "sourceHandle": "1",
+      "target": "mRxpLXxjP",
+      "targetHandle": null,
+      "id": "fSsBh_dFY"
+    },
+    {
+      "source": "u6w70Qe4G",
+      "sourceHandle": "2",
+      "target": "1TKIYv9Fd",
+      "targetHandle": null,
+      "id": "T6r7MXAjp"
+    },
+    {
+      "source": "u6w70Qe4G",
+      "sourceHandle": "1",
+      "target": "_iFkU1C17",
+      "targetHandle": null,
+      "id": "NKQ44iF4X"
     }
   ]
 }

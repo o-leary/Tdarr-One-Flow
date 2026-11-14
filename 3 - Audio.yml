@@ -1834,6 +1834,104 @@
         "y": 1609.5077674862482
       },
       "fpEnabled": true
+    },
+    {
+      "name": "Audio - Remove Data Streams 📼",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandRemoveDataStreams",
+      "version": "1.0.0",
+      "inputsDB": {},
+      "id": "ZQW3ylzZb",
+      "position": {
+        "x": 26.606142168926823,
+        "y": 2142.585372328533
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Audio - PCM - Any PCM/uncompressed audio? 🔍",
+      "sourceRepo": "Community",
+      "pluginName": "checkStreamProperty",
+      "version": "1.0.0",
+      "inputsDB": {
+        "streamType": "audio",
+        "propertyToCheck": "codec_name",
+        "valuesToMatch": "pcm",
+        "condition": "includes"
+      },
+      "id": "9bOae-P2P",
+      "position": {
+        "x": 699.0237635475343,
+        "y": -181.1345431028888
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Audio - PCM - Begin ffmpeg Command 📼",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandStart",
+      "version": "1.0.0",
+      "inputsDB": {},
+      "id": "4MzUbKnva",
+      "position": {
+        "x": 879.0237635475343,
+        "y": -381.1345431028888
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Audio - PCM - Remove Data Streams 📼",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandRemoveDataStreams",
+      "version": "1.0.0",
+      "inputsDB": {},
+      "id": "N_4fLwDqX",
+      "position": {
+        "x": 1039.023763547534,
+        "y": -381.1345431028888
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Audio - PCM - Encode audio to AAC 📼",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputArguments": "-c:v copy -c:a:0 aac -b:a {{{args.userVariables.library.bitrate_audio}}}"
+      },
+      "id": "NujYsMmZQ",
+      "position": {
+        "x": 1199.023763547534,
+        "y": -381.1345431028888
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Audio - PCM - Execute Audio Encode ⏳",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandExecute",
+      "version": "1.0.0",
+      "inputsDB": {},
+      "id": "SiwY7VSVL",
+      "position": {
+        "x": 1359.023763547534,
+        "y": -381.1345431028888
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Audio - PCM - Encode done ✅",
+      "sourceRepo": "Community",
+      "pluginName": "resetFlowError",
+      "version": "1.0.0",
+      "inputsDB": {},
+      "id": "1t8_x9bUV",
+      "position": {
+        "x": 1529.023763547534,
+        "y": -301.1345431028888
+      },
+      "fpEnabled": true
     }
   ],
   "flowEdges": [
@@ -2174,7 +2272,7 @@
       "id": "owWCbUCuX"
     },
     {
-      "source": "AVOGHm5kI",
+      "source": "ZQW3ylzZb",
       "sourceHandle": "1",
       "target": "gdq5cqEJ1",
       "targetHandle": null,
@@ -3035,8 +3133,8 @@
       "id": "m5pNRtoWy"
     },
     {
-      "source": "jG9agfHPW",
-      "sourceHandle": "1",
+      "source": "9bOae-P2P",
+      "sourceHandle": "2",
       "target": "K02RcF2UK",
       "targetHandle": null,
       "id": "LMmIlghLt"
@@ -3096,6 +3194,69 @@
       "target": "ie0ITMYKV",
       "targetHandle": null,
       "id": "2HuTIeqvR"
+    },
+    {
+      "source": "AVOGHm5kI",
+      "sourceHandle": "1",
+      "target": "ZQW3ylzZb",
+      "targetHandle": null,
+      "id": "9aaPxdHfF"
+    },
+    {
+      "source": "jG9agfHPW",
+      "sourceHandle": "1",
+      "target": "9bOae-P2P",
+      "targetHandle": null,
+      "id": "iwEC9x5iH"
+    },
+    {
+      "source": "9bOae-P2P",
+      "sourceHandle": "1",
+      "target": "4MzUbKnva",
+      "targetHandle": null,
+      "id": "i7GLcilZM"
+    },
+    {
+      "source": "4MzUbKnva",
+      "sourceHandle": "1",
+      "target": "N_4fLwDqX",
+      "targetHandle": null,
+      "id": "CXTuS7sm7"
+    },
+    {
+      "source": "N_4fLwDqX",
+      "sourceHandle": "1",
+      "target": "NujYsMmZQ",
+      "targetHandle": null,
+      "id": "AC2ui8RTe"
+    },
+    {
+      "source": "NujYsMmZQ",
+      "sourceHandle": "1",
+      "target": "SiwY7VSVL",
+      "targetHandle": null,
+      "id": "kpN5wsa25"
+    },
+    {
+      "source": "SiwY7VSVL",
+      "sourceHandle": "1",
+      "target": "1t8_x9bUV",
+      "targetHandle": null,
+      "id": "jozSh-U8F"
+    },
+    {
+      "source": "1t8_x9bUV",
+      "sourceHandle": "1",
+      "target": "puesfFpWS",
+      "targetHandle": null,
+      "id": "oFFL7pDgr"
+    },
+    {
+      "source": "SiwY7VSVL",
+      "sourceHandle": "err1",
+      "target": "1t8_x9bUV",
+      "targetHandle": null,
+      "id": "eodtUGb9c"
     }
   ]
 }
