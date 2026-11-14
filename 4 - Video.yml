@@ -3790,7 +3790,7 @@
       "pluginName": "ffmpegCommandCustomArguments",
       "version": "1.0.0",
       "inputsDB": {
-        "outputArguments": "-c:a aac -b:a {{{args.userVariables.library.bitrate_audio}}}"
+        "outputArguments": "-c:a aac -b:a {{{args.variables.bitrate_audio_effective}}}"
       },
       "id": "fhghVNMWb",
       "position": {
@@ -3827,6 +3827,170 @@
       "position": {
         "x": 1790,
         "y": -2650
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - Legacy source - Live size check off 📼",
+      "sourceRepo": "Community",
+      "pluginName": "compareFileSizeRatioLive",
+      "version": "1.0.0",
+      "inputsDB": {
+        "enabled": "false",
+        "compareMethod": "estimatedFinalSize",
+        "thresholdPerc": "{{{args.variables.user.fl_cq_filesize_ratio}}}",
+        "lowerThresholdPerc": "0",
+        "checkDelaySeconds": "{{{args.variables.user.fl_cq_filesize_ratio_time}}}"
+      },
+      "id": "lgcyNoLive",
+      "position": {
+        "x": 1090.8310247736804,
+        "y": -2463.676727065127
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - Legacy source - Audio bitrate 🧮",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const lib = (args.userVariables && args.userVariables.library) || {};\n  const capK = parseInt(String(lib.bitrate_audio || '256k').replace(/k$/i, ''), 10) || 256;\n  const streams = ((args.inputFileObj.ffProbeData || {}).streams) || [];\n  const aud = streams.filter((s) => s.codec_type === 'audio'\n    && !(s.disposition && s.disposition.attached_pic));\n  const srcK = aud.reduce((m, s) => Math.max(m, parseInt(s.bit_rate, 10) || 0), 0) / 1000;\n  const vars = args.variables || {};\n  let k = capK;\n  if (srcK > 0) k = Math.min(capK, Math.max(96, Math.round(srcK * 1.6)));\n  vars.bitrate_audio_effective = `${k}k`;\n  args.jobLog(`Legacy audio: source ${Math.round(srcK)}k -> aac ${k}k (bitrate_audio ceiling ${capK}k)`);\n  return { outputFileObj: args.inputFileObj, outputNumber: 1, variables: vars };\n};\n"
+      },
+      "id": "lgcyAudBit",
+      "position": {
+        "x": 1590.8310247736804,
+        "y": -2533.676727065127
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - Legacy source - Video already MP4-safe? 🔍",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "{{{args.variables.user.legacy_copy_video}}}",
+        "value": "true"
+      },
+      "id": "lgcyVidChk",
+      "position": {
+        "x": 1790,
+        "y": -2450
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - Legacy source - Copy video 📼",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "inputArguments": "",
+        "outputArguments": "-c:v copy -max_muxing_queue_size 9999"
+      },
+      "id": "lgcyVidCopy",
+      "position": {
+        "x": 1530,
+        "y": -2350
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - Legacy avi? 🔍",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "{{{args.variables.user.is_wmv}}}",
+        "value": "true"
+      },
+      "id": "lgcyAviChk",
+      "position": {
+        "x": 999.534943957258,
+        "y": -3246.689619760736
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - Legacy hevc? 🔍",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "{{{args.variables.user.is_wmv}}}",
+        "value": "true"
+      },
+      "id": "lgcHevcChk",
+      "position": {
+        "x": 1224.7529686952137,
+        "y": -3531.383585292938
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - Legacy av1? 🔍",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "{{{args.variables.user.is_wmv}}}",
+        "value": "true"
+      },
+      "id": "lgcAv1Chk",
+      "position": {
+        "x": 1812.5814785441123,
+        "y": -3217.083429738266
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - Low bitrate source? 🔍",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "{{{args.variables.user.low_bitrate_encode}}}",
+        "value": "true"
+      },
+      "id": "lbitChk1",
+      "position": {
+        "x": 1290.8310247736804,
+        "y": -2433.676727065127
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - Low bitrate - Live size check off 📼",
+      "sourceRepo": "Community",
+      "pluginName": "compareFileSizeRatioLive",
+      "version": "1.0.0",
+      "inputsDB": {
+        "enabled": "false",
+        "compareMethod": "estimatedFinalSize",
+        "thresholdPerc": "{{{args.variables.user.fl_cq_filesize_ratio}}}",
+        "lowerThresholdPerc": "0",
+        "checkDelaySeconds": "{{{args.variables.user.fl_cq_filesize_ratio_time}}}"
+      },
+      "id": "lbitNoLive",
+      "position": {
+        "x": 1230.8310247736804,
+        "y": -2283.676727065127
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - Low bitrate - Cap bitrate 🧮",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const LOWCAP = parseFloat(((args.userVariables || {}).library || {}).low_bitrate_cap_ratio\n    || '0.9');\n  const streams = ((args.inputFileObj.ffProbeData || {}).streams) || [];\n  const v = streams.find((s) => s.codec_type === 'video'\n    && !(s.disposition && s.disposition.attached_pic)) || {};\n  const src = parseInt(v.bit_rate, 10) || parseInt(args.inputFileObj.bit_rate, 10) || 0;\n  const vars = args.variables || {};\n  ['480p', '576p', '720p', '1080p', '1440p', '4k', '4k_hdr'].forEach((r) => {\n    vars['cutoff_' + r] = '0';\n  });\n  if (src > 0) {\n    const cap = Math.max(300, Math.round((src * LOWCAP) / 1000));\n    const cur = parseInt(String(vars.bitrate_effective || '').replace(/k$/i, ''), 10) || 0;\n    if (!cur || cap < cur) {\n      vars.bitrate_effective = cap + 'k';\n      vars.maxrate_effective = cap + 'k';\n      vars.bufsize_effective = (cap * 2) + 'k';\n    }\n    args.jobLog(`Low bitrate source: ${Math.round(src / 1000)}k -> encode target ${vars.bitrate_effective} (maxrate ${vars.maxrate_effective}, bufsize ${vars.bufsize_effective}); cutoffs cleared so the VBR branch runs, not -cq`);\n  } else {\n    args.jobLog('Low bitrate source: no bitrate in ffprobe, clearing cutoffs only');\n  }\n  return { outputFileObj: args.inputFileObj, outputNumber: 1, variables: vars };\n};\n"
+      },
+      "id": "lbitCap",
+      "position": {
+        "x": 1430.8310247736804,
+        "y": -2203.676727065127
       },
       "fpEnabled": true
     }
@@ -3940,7 +4104,7 @@
     {
       "source": "1eZMD_YUy",
       "sourceHandle": "1",
-      "target": "whLxoif7t",
+      "target": "lgcyAviChk",
       "targetHandle": null,
       "id": "VeuVV0DIV"
     },
@@ -5305,7 +5469,7 @@
     {
       "source": "Ptb_fuRE1",
       "sourceHandle": "2",
-      "target": "lOj0EaMdc",
+      "target": "lgcHevcChk",
       "targetHandle": null,
       "id": "GAayAC-jQ"
     },
@@ -6220,13 +6384,6 @@
       "id": "eMaxRes1"
     },
     {
-      "source": "TsKGk-fks",
-      "sourceHandle": "1",
-      "target": "2YrneglXQ",
-      "targetHandle": null,
-      "id": "eMaxRes2"
-    },
-    {
       "source": "rBitDepth1",
       "sourceHandle": "err1",
       "target": "ykLLIDQ7U",
@@ -6313,7 +6470,7 @@
     {
       "source": "ovrAv101",
       "sourceHandle": "2",
-      "target": "YYD-hDxhI",
+      "target": "lgcAv1Chk",
       "targetHandle": null,
       "id": "ovrE0004"
     },
@@ -6327,14 +6484,14 @@
     {
       "source": "vxISWyoel",
       "sourceHandle": "1",
-      "target": "WX_Ajnh7O",
+      "target": "lgcyNoLive",
       "targetHandle": null,
       "id": "bYf2aRv5S"
     },
     {
       "source": "WX_Ajnh7O",
       "sourceHandle": "1",
-      "target": "fhghVNMWb",
+      "target": "lgcyAudBit",
       "targetHandle": null,
       "id": "_WzX8CEkJ"
     },
@@ -6348,7 +6505,7 @@
     {
       "source": "vxISWyoel",
       "sourceHandle": "2",
-      "target": "rBitDepth1",
+      "target": "lbitChk1",
       "targetHandle": null,
       "id": "mpMB1ymOK"
     },
@@ -6376,9 +6533,114 @@
     {
       "source": "jFLYmYzDV",
       "sourceHandle": "1",
-      "target": "2YrneglXQ",
+      "target": "lgcyVidChk",
       "targetHandle": null,
       "id": "YmahahV0F"
+    },
+    {
+      "source": "lgcyNoLive",
+      "sourceHandle": "1",
+      "target": "WX_Ajnh7O",
+      "targetHandle": null,
+      "id": "lgcyNoLiveE"
+    },
+    {
+      "source": "lgcyAudBit",
+      "sourceHandle": "1",
+      "target": "fhghVNMWb",
+      "targetHandle": null,
+      "id": "lgcyAudE"
+    },
+    {
+      "source": "lgcyVidChk",
+      "sourceHandle": "2",
+      "target": "2YrneglXQ",
+      "targetHandle": null,
+      "id": "lgcyVidEnc"
+    },
+    {
+      "source": "lgcyVidChk",
+      "sourceHandle": "1",
+      "target": "lgcyVidCopy",
+      "targetHandle": null,
+      "id": "lgcyVidCop"
+    },
+    {
+      "source": "lgcyVidCopy",
+      "sourceHandle": "1",
+      "target": "stuikulyy",
+      "targetHandle": null,
+      "id": "lgcyVidRun"
+    },
+    {
+      "source": "lgcyAviChk",
+      "sourceHandle": "2",
+      "target": "whLxoif7t",
+      "targetHandle": null,
+      "id": "lgcyAviNo"
+    },
+    {
+      "source": "lgcyAviChk",
+      "sourceHandle": "1",
+      "target": "mZGhkFE_A",
+      "targetHandle": null,
+      "id": "lgcyAviYes"
+    },
+    {
+      "source": "lgcHevcChk",
+      "sourceHandle": "2",
+      "target": "lOj0EaMdc",
+      "targetHandle": null,
+      "id": "lgcHevcNo"
+    },
+    {
+      "source": "lgcHevcChk",
+      "sourceHandle": "1",
+      "target": "rWuLs0j7E",
+      "targetHandle": null,
+      "id": "lgcHevcYes"
+    },
+    {
+      "source": "lgcAv1Chk",
+      "sourceHandle": "2",
+      "target": "YYD-hDxhI",
+      "targetHandle": null,
+      "id": "lgcAv1No"
+    },
+    {
+      "source": "lgcAv1Chk",
+      "sourceHandle": "1",
+      "target": "1eZMD_YUy",
+      "targetHandle": null,
+      "id": "lgcAv1Yes"
+    },
+    {
+      "source": "lbitChk1",
+      "sourceHandle": "2",
+      "target": "rBitDepth1",
+      "targetHandle": null,
+      "id": "lbitNo"
+    },
+    {
+      "source": "lbitChk1",
+      "sourceHandle": "1",
+      "target": "lbitNoLive",
+      "targetHandle": null,
+      "id": "lbitYes"
+    },
+    {
+      "source": "lbitNoLive",
+      "sourceHandle": "1",
+      "target": "lbitCap",
+      "targetHandle": null,
+      "id": "lbitLive1"
+    },
+    {
+      "source": "lbitCap",
+      "sourceHandle": "1",
+      "target": "rBitDepth1",
+      "targetHandle": null,
+      "id": "lbitCap1"
     }
   ]
 }

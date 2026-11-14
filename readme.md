@@ -20,7 +20,7 @@ I have a library for low quality, high quality, Animation, Movies.  Each has the
 - Works with Nvidia, Intel QuickSync and CPU (Help me add others by sharing your ffmpeg command)
 - Strip audio to where only the tracks you want remain
 - If a lossless audio track exists, encode it in AAC (can disable, still needs refinement, as sometimes encodes high bitrate non-lossless tracks)
-- Everything leaves the pipeline as an `.mp4` with HEVC video and AAC audio, the combination that direct-plays most widely (Plex/Jellyfin, phones, smart TVs, browsers). If mp4 cannot carry something (bitmap subtitles, DTS/TrueHD audio), that file falls back to an mkv container instead
+- Everything leaves the pipeline as an `.mp4` with HEVC video and AAC audio, the combination that direct-plays most widely (Plex/Jellyfin, phones, smart TVs, browsers). If mp4 cannot carry something (bitmap subtitles, DTS/TrueHD audio), that file falls back to an mkv container instead; WMV/VC-1 video and WMA audio are converted to HEVC + AAC instead of being re-wrapped
 - Deinterlace .ts files. (tv DVR broadcasts)
 - Export Embedded Subtitles (Could use more testing and refinement)
 - Maximum output resolution (`v_max_resolution`), e.g. store 4K releases as 1080p: sources above it are downscaled, and the bitrate follows the target resolution's setting (see Maximum Resolution below)
@@ -69,7 +69,8 @@ What replace mode does:
 - The encoded file replaces the original atomically: it is copied into a hidden `.tdarr-partial/` folder next to the original (Sonarr, Plex and Jellyfin ignore dot-folders), verified, then renamed over the original, so the episode never disappears mid-replace.
 - If the encode fails a review check (duration, size), it goes to `output_dir_review` and the original is **kept**.
 - With `sonarr_url` / `sonarr_api_key` (TV) or `radarr_url` / `radarr_api_key` (movies) set, Sonarr or Radarr rescans the series or movie and renames the new file, so its records (size, codec, file name) match the replaced file. If a library has both, the app whose series/movie folder contains the file is used. Without them the file is still replaced, and the app only notices at its next disk scan.
-- A skip gate leaves files alone (default tracks only) when the video is already HEVC/AV1 (unless it is larger than `v_max_resolution` and the library has `force_downscale = true`, see Maximum Resolution), or the source bitrate is below `low_bitrate_skip_ratio` (default 0.9) of the target for its resolution.
+- A skip gate leaves files alone (default tracks only) when the video is already HEVC/AV1 (unless it is larger than `v_max_resolution` and the library has `force_downscale = true`, see Maximum Resolution). Sources under `low_bitrate_skip_ratio` (default 0.9) of the target for their resolution are no longer skipped: they are encoded with a cap at `low_bitrate_cap_ratio` of their own bitrate (see the library variables).
+- Sources mp4 cannot carry at all are always converted, whatever their bitrate: WMV/VC-1/RealVideo video, or WMA/RealAudio/ATRAC audio (ASF containers, and the Matroska files older flow runs fell back to). They are forced into `.mp4` with AAC audio, sized from the source instead of the library target so they do not grow, and their video is re-encoded only when mp4 cannot carry it - if the video is already HEVC/AV1 it is stream-copied and just the audio and container change.
 
 # Maximum Resolution, e.g. 4K down to 1080p (added in this fork)
 The practical use: you can keep grabbing 4K releases but store them as 1080p, the standard most of your players handle natively. Then Plex/Jellyfin don't have to transcode 4K on the fly for devices that can't play it, which is expensive on the server, and the files are much smaller.
@@ -217,6 +218,10 @@ radarr_url = http://radarr:7878 # With save_mode = replace on a movie library: R
 radarr_api_key = <key> # With save_mode = replace
 
 low_bitrate_skip_ratio = 0.9 # With save_mode = replace: skip encoding sources below this fraction of the target bitrate (default 0.9)
+
+low_bitrate_action = cap # With save_mode = replace: what to do with sources under that fraction. `cap` (default) encodes them to HEVC at `low_bitrate_cap_ratio` of their own bitrate; `skip` leaves them alone as before
+
+low_bitrate_cap_ratio = 0.9 # With `low_bitrate_action = cap`: encode at this fraction of the measured source video bitrate (300k floor, never above your target for the resolution)
 
 force_downscale = true # With v_max_resolution: also re-encode HEVC/AV1 files larger than v_max_resolution so they get downscaled (any library, including replace mode). Leave unset to keep 4K HEVC/AV1 files as they are (default off)
 

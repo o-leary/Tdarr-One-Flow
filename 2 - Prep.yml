@@ -1361,6 +1361,22 @@
         "y": 1508.6214002099568
       },
       "fpEnabled": true
+    },
+    {
+      "name": "Prep & Clean - Legacy container? 🔍",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "{{{args.variables.user.is_wmv}}}",
+        "value": "true"
+      },
+      "id": "lgcyNoRemux",
+      "position": {
+        "x": 683.5591655086905,
+        "y": -536.4669870538951
+      },
+      "fpEnabled": true
     }
   ],
   "flowEdges": [
@@ -2039,7 +2055,7 @@
     {
       "source": "d8balkJHB",
       "sourceHandle": "1",
-      "target": "wpTkxtpa6",
+      "target": "lgcyNoRemux",
       "targetHandle": null,
       "id": "wt9QTOTt3"
     },
@@ -2126,6 +2142,20 @@
       "target": "_iFkU1C17",
       "targetHandle": null,
       "id": "NKQ44iF4X"
+    },
+    {
+      "source": "lgcyNoRemux",
+      "sourceHandle": "2",
+      "target": "wpTkxtpa6",
+      "targetHandle": null,
+      "id": "lgcyRemux"
+    },
+    {
+      "source": "lgcyNoRemux",
+      "sourceHandle": "1",
+      "target": "4HcUvOUMU",
+      "targetHandle": null,
+      "id": "lgcyNoRemux"
     }
   ]
 }

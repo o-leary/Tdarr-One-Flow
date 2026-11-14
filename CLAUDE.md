@@ -91,6 +91,8 @@ Flow 1 sets encoder-specific parameters. Supported encoders: `nvenc` (NVIDIA), `
 | `radarr_url` | With `save_mode=replace`: Radarr base URL, e.g. `http://radarr:7878` (movie libraries) |
 | `radarr_api_key` | With `save_mode=replace`: Radarr API key used to rescan the movie and rename the replaced file. If both apps are set, the one whose series/movie folder contains the file is used |
 | `low_bitrate_skip_ratio` | With `save_mode=replace`: skip encoding when the source video bitrate is below this fraction of the resolution's target (default `0.9`) |
+| `low_bitrate_action` | With `save_mode=replace`: `cap` (default) encodes those sources to HEVC at `low_bitrate_cap_ratio` of their own bitrate; `skip` leaves them alone |
+| `low_bitrate_cap_ratio` | Fraction of the measured source video bitrate used when `low_bitrate_action = cap` (default `0.9`, 300k floor, never above the resolution's target) |
 | `protect_hardlinks_root` | The default-track fix never edits an original in place if it lives under, or is hard-linked into, this directory (default `/media/downloads`, so seeding torrents are untouched) |
 | `force_downscale` | `true` — with `v_max_resolution` (any library), the Input skip gate encodes HEVC/AV1 sources larger than the cap (sets `oversize_encode`, which lets the Video flow past its `do_hevc` and AV1 skips). Off by default so libraries whose 4K copies should be kept are never downscaled |
 | `default_track_language` | Preferred language for the default-track fix: comma-separated ISO 639-1/639-2 codes (default `eng,en`; each code is expanded to its equivalents, e.g. `es` also matches `spa`). `off` disables the fix |
