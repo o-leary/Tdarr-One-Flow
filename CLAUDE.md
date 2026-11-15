@@ -93,6 +93,7 @@ Flow 1 sets encoder-specific parameters. Supported encoders: `nvenc` (NVIDIA), `
 | `low_bitrate_skip_ratio` | With `save_mode=replace`: skip encoding when the source video bitrate is below this fraction of the resolution's target (default `0.9`) |
 | `low_bitrate_action` | With `save_mode=replace`: `cap` (default) encodes those sources to HEVC at `low_bitrate_cap_ratio` of their own bitrate; `skip` leaves them alone |
 | `low_bitrate_cap_ratio` | Fraction of the measured source video bitrate used when `low_bitrate_action = cap` (default `0.9`, 300k floor, never above the resolution's target) |
+| `cq_fallback_cap_ratio` | Fraction of the tier target below which a source is tagged and capped (default 1.15, the same factor the flow uses for its `cutoff_` variables). Sources in the band between `low_bitrate_skip_ratio` and this value would otherwise reach the `-cq` fallback, where the live size check cancels the encode and the file is left untouched |
 | `avi_encode` | Set to `false` to skip `.avi` sources entirely (the old bypass: no encode, stays `.avi`). Unset means they are encoded and re-wrapped to `.mp4` |
 | `duration_slack_seconds` | Extra seconds of duration drift allowed in `5 - Save File` (default 5). Sources whose container under-reports their own stream duration otherwise fail the duration check and get sent for review |
 | `duration_slack_ratio` | Drift allowed as a fraction of the original duration (default 0.01); the larger of this and `duration_slack_seconds` is used, capped at `duration_slack_max_ratio` |

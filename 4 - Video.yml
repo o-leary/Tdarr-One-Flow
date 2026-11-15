@@ -6585,14 +6585,14 @@
     {
       "source": "vxISWyoel",
       "sourceHandle": "2",
-      "target": "lbitChk1",
+      "target": "rBitDepth1",
       "targetHandle": null,
       "id": "mpMB1ymOK"
     },
     {
       "source": "TsKGk-fks",
       "sourceHandle": "2",
-      "target": "2YrneglXQ",
+      "target": "lbitChk1",
       "targetHandle": null,
       "id": "8PWb_domN"
     },
@@ -6697,7 +6697,7 @@
     {
       "source": "lbitChk1",
       "sourceHandle": "2",
-      "target": "rBitDepth1",
+      "target": "2YrneglXQ",
       "targetHandle": null,
       "id": "lbitNo"
     },
@@ -6718,7 +6718,7 @@
     {
       "source": "lbitCap",
       "sourceHandle": "1",
-      "target": "rBitDepth1",
+      "target": "2YrneglXQ",
       "targetHandle": null,
       "id": "lbitCap1"
     },
