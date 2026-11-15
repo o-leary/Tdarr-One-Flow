@@ -4073,13 +4073,76 @@
         "y": 488.9283237014307
       },
       "fpEnabled": true
+    },
+    {
+      "name": "Video - Rewrap only? 🔍",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "{{{args.variables.user.rewrap_only}}}",
+        "value": "true"
+      },
+      "id": "rwChk01",
+      "position": {
+        "x": 1290.8310247736804,
+        "y": -933.6767270651272
+      },
+      "fpEnabled": true,
+      "positionAbsolute": {
+        "x": 1290.8310247736804,
+        "y": -933.6767270651272
+      },
+      "selected": false
+    },
+    {
+      "name": "Video - Rewrap - Set Output Container 📼",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandSetContainer",
+      "version": "1.0.0",
+      "inputsDB": {
+        "container": "{{{args.variables.user.out_container}}}",
+        "forceConform": "false"
+      },
+      "id": "rwCont01",
+      "position": {
+        "x": 1140.0,
+        "y": -750.0
+      },
+      "fpEnabled": true,
+      "positionAbsolute": {
+        "x": 1140.0,
+        "y": -750.0
+      },
+      "selected": false
+    },
+    {
+      "name": "Video - Rewrap - Copy all streams 📼",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "inputArguments": "",
+        "outputArguments": "-c copy"
+      },
+      "id": "rwArgs01",
+      "position": {
+        "x": 1530.0,
+        "y": -510.0
+      },
+      "fpEnabled": true,
+      "positionAbsolute": {
+        "x": 1530.0,
+        "y": -510.0
+      },
+      "selected": false
     }
   ],
   "flowEdges": [
     {
       "source": "2OlpiKQ6y",
       "sourceHandle": "1",
-      "target": "dvSkipV01",
+      "target": "rwChk01",
       "targetHandle": null,
       "id": "X3R2vFEUn"
     },
@@ -6777,6 +6840,34 @@
       "target": "h_GgZQ6qp",
       "targetHandle": null,
       "id": "cqVbrGo"
+    },
+    {
+      "source": "rwChk01",
+      "sourceHandle": "2",
+      "target": "dvSkipV01",
+      "targetHandle": null,
+      "id": "eRwNo01"
+    },
+    {
+      "source": "rwChk01",
+      "sourceHandle": "1",
+      "target": "rwCont01",
+      "targetHandle": null,
+      "id": "eRwCn01"
+    },
+    {
+      "source": "rwCont01",
+      "sourceHandle": "1",
+      "target": "rwArgs01",
+      "targetHandle": null,
+      "id": "eRwAr01"
+    },
+    {
+      "source": "rwArgs01",
+      "sourceHandle": "1",
+      "target": "stuikulyy",
+      "targetHandle": null,
+      "id": "eRwEx01"
     }
   ]
 }
