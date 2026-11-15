@@ -225,6 +225,12 @@ low_bitrate_cap_ratio = 0.9 # With `low_bitrate_action = cap`: encode at this fr
 
 avi_encode = false # Optional: with save_mode = replace, go back to skipping .avi sources entirely (no encode, file stays .avi). Unset or any other value encodes them (default)
 
+duration_slack_seconds = 5 # Optional: extra duration drift the save checks allow, in seconds. Some legacy containers (ASF/WMV) under-report their own video duration, so an honest transcode can look 0.8% long and be sent for review. The bounds widen to +/- max(this, duration_slack_ratio of the original), never past duration_slack_max_ratio
+
+duration_slack_ratio = 0.01 # Optional: same allowance as a fraction of the original duration (default 1%)
+
+duration_slack_max_ratio = 0.05 # Optional: how far the allowance may stretch, as a fraction of the original duration (default 5%) - real faults are still caught
+
 force_downscale = true # With v_max_resolution: also re-encode HEVC/AV1 files larger than v_max_resolution so they get downscaled (any library, including replace mode). Leave unset to keep 4K HEVC/AV1 files as they are (default off)
 
 default_track_language = eng,en # Language for default audio/subtitles (ISO codes, comma-separated, default English). "off" disables the default-track fix

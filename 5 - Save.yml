@@ -880,6 +880,21 @@
       "inputsDB": {
         "code": "module.exports = async (args) => {\n  // Final step for input/output libraries: move the encode into output_dir_done\n  // and clean up the original, all in one node. It must be the last plugin: Sonarr\n  // imports from output_dir_done within seconds, and any later plugin makes Tdarr\n  // rescan the moved file, fail with \"not found\", and skip the original's\n  // deletion (2026-10-21: 100 failed jobs, ~1 TB of originals left behind).\n  // The encode is copied into a hidden .tdarr-partial/ folder (Sonarr skips\n  // dot-folders), verified, then renamed into place in one step, so Sonarr never\n  // sees a partial file. The original is deleted afterwards unless test_mode=true.\n  let fsp;\n  try { fsp = require('fs').promises; } catch (e) { fsp = args.deps.fsextra.promises || args.deps.fsextra; }\n  const path = (() => { try { return require('path'); } catch (e) { return args.deps.path; } })();\n  const lib = (args.userVariables && args.userVariables.library) || {};\n\n  const working = args.inputFileObj._id;\n  const original = args.originalLibraryFile._id;\n  const libRoot = String((args.librarySettings && args.librarySettings.folder) || '').replace(/\\/+$/, '');\n  const doneRoot = String(lib.output_dir_done || '').replace(/\\/+$/, '');\n  if (!doneRoot) throw new Error('output_dir_done is not set');\n\n  // Same layout as Move To Directory with keepRelativePath: the original's\n  // folder relative to the library root.\n  const rel = libRoot && path.dirname(original).startsWith(`${libRoot}/`)\n    ? path.relative(libRoot, path.dirname(original)) : '';\n  const destDir = path.join(doneRoot, rel);\n  const dest = path.join(destDir, path.basename(working));\n\n  if (String((args.variables.user || {}).low_bitrate_skip) === 'true') {\n    args.jobLog('Video was not encoded: source bitrate too close to the target');\n  }\n\n  const src = await fsp.stat(working);\n  await fsp.mkdir(destDir, { recursive: true });\n  if (working === original) {\n    // Nothing was re-encoded: the original itself is the result.\n    try {\n      await fsp.rename(original, dest);\n    } catch (err) {\n      if (err.code !== 'EXDEV') throw err;\n      await fsp.copyFile(original, dest);\n      await fsp.unlink(original);\n    }\n    args.jobLog(`Moved unchanged original to ${dest}`);\n    return { outputFileObj: { _id: dest }, outputNumber: 1, variables: args.variables };\n  }\n\n  const tmpDir = path.join(doneRoot, '.tdarr-partial');\n  const tmp = path.join(tmpDir, `${path.basename(working)}.${Date.now()}.partial~`);\n  try {\n    await fsp.mkdir(tmpDir, { recursive: true });\n    await fsp.copyFile(working, tmp);\n    const fh = await fsp.open(tmp, 'r+');\n    await fh.sync();\n    await fh.close();\n    const size = (await fsp.stat(tmp)).size;\n    if (size !== src.size) throw new Error(`copy size mismatch: ${size} != ${src.size}`);\n    await fsp.utimes(tmp, src.atime, src.mtime);\n    await fsp.rename(tmp, dest);\n  } catch (err) {\n    await fsp.unlink(tmp).catch(() => {});\n    throw new Error(`Move to ${dest} failed, original left untouched: ${err.message}`);\n  }\n  // Another job may still be using it; only removed once empty.\n  await fsp.rmdir(tmpDir).catch(() => {});\n  await fsp.unlink(working).catch(() => {});\n  args.jobLog(`Saved to ${dest} (${src.size} bytes)`);\n\n  if (String(lib.test_mode) === 'true') {\n    args.jobLog('test_mode=true: original kept');\n  } else {\n    try {\n      await fsp.unlink(original);\n      args.jobLog(`Deleted original ${original}`);\n      const parent = path.dirname(original);\n      if (parent !== libRoot) {\n        await fsp.rmdir(parent).then(() => args.jobLog(`Removed empty folder ${parent}`)).catch(() => {});\n      }\n    } catch (err) {\n      args.jobLog(`Warning: could not delete original ${original}: ${err.message}`);\n    }\n  }\n  return { outputFileObj: { _id: dest }, outputNumber: 1, variables: args.variables };\n};\n"
       }
+    },
+    {
+      "name": "Save File - Duration bounds 🧮",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const of = ((args.originalLibraryFile || {}).ffProbeData || {}).format || {};\n  const od = parseFloat(of.duration) || 0;\n  const vars = args.variables || {};\n  vars.user = vars.user || {};\n  const lib = (args.userVariables || {}).library || {};\n  const curMin = parseFloat(vars.user.fl_min_duration_limit) || 99.5;\n  const curMax = parseFloat(vars.user.fl_max_duration_limit) || 100.5;\n  const slackSec = parseFloat(lib.duration_slack_seconds) || 5;\n  const slackRatio = parseFloat(lib.duration_slack_ratio) || 0.01;\n  const wanted = Math.max(slackSec, od * slackRatio);\n  const hardCap = od * (parseFloat(lib.duration_slack_max_ratio) || 0.05);\n  const slack = hardCap > 0 ? Math.min(wanted, hardCap) : wanted;\n  if (od > 0) {\n    const up = ((od + slack) / od) * 100;\n    const dn = ((od - slack) / od) * 100;\n    if (up > curMax) vars.user.fl_max_duration_limit = up.toFixed(3);\n    if (dn < curMin) vars.user.fl_min_duration_limit = dn.toFixed(3);\n    args.jobLog(`Duration bounds for this file: original ${od.toFixed(3)}s, slack ${slack.toFixed(2)}s (max ${((hardCap/od)*100).toFixed(1)}% of it) -> ${vars.user.fl_min_duration_limit}% .. ${vars.user.fl_max_duration_limit}%`);\n  }\n  return { outputFileObj: args.inputFileObj, outputNumber: 1, variables: vars };\n};\n"
+      },
+      "id": "durAllow1",
+      "position": {
+        "x": 898.394104579493,
+        "y": 385.40926538401106
+      },
+      "fpEnabled": true
     }
   ],
   "flowEdges": [
@@ -914,7 +929,7 @@
     {
       "source": "ZxTV8ok64",
       "sourceHandle": "1",
-      "target": "NsPaSlbgC",
+      "target": "durAllow1",
       "targetHandle": null,
       "id": "z8iWbmTVV"
     },
@@ -977,7 +992,7 @@
     {
       "source": "p3X5chJrI",
       "sourceHandle": "1",
-      "target": "NsPaSlbgC",
+      "target": "durAllow1",
       "targetHandle": null,
       "id": "ja3GtTxKJ"
     },
@@ -1299,7 +1314,7 @@
     {
       "source": "YDW3NSYnC",
       "sourceHandle": "1",
-      "target": "NsPaSlbgC",
+      "target": "durAllow1",
       "targetHandle": null,
       "id": "mLF7VxjzV"
     },
@@ -1421,6 +1436,13 @@
       "target": "6VbHV-9sJ",
       "targetHandle": null,
       "id": "dfltE0002"
+    },
+    {
+      "source": "durAllow1",
+      "sourceHandle": "1",
+      "target": "NsPaSlbgC",
+      "targetHandle": null,
+      "id": "durAllowGo"
     }
   ]
 }

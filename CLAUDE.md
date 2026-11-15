@@ -94,6 +94,9 @@ Flow 1 sets encoder-specific parameters. Supported encoders: `nvenc` (NVIDIA), `
 | `low_bitrate_action` | With `save_mode=replace`: `cap` (default) encodes those sources to HEVC at `low_bitrate_cap_ratio` of their own bitrate; `skip` leaves them alone |
 | `low_bitrate_cap_ratio` | Fraction of the measured source video bitrate used when `low_bitrate_action = cap` (default `0.9`, 300k floor, never above the resolution's target) |
 | `avi_encode` | Set to `false` to skip `.avi` sources entirely (the old bypass: no encode, stays `.avi`). Unset means they are encoded and re-wrapped to `.mp4` |
+| `duration_slack_seconds` | Extra seconds of duration drift allowed in `5 - Save File` (default 5). Sources whose container under-reports their own stream duration otherwise fail the duration check and get sent for review |
+| `duration_slack_ratio` | Drift allowed as a fraction of the original duration (default 0.01); the larger of this and `duration_slack_seconds` is used, capped at `duration_slack_max_ratio` |
+| `duration_slack_max_ratio` | Hard cap on how far the duration bounds may widen, as a fraction of the original duration (default 0.05 = 5%) |
 | `protect_hardlinks_root` | The default-track fix never edits an original in place if it lives under, or is hard-linked into, this directory (default `/media/downloads`, so seeding torrents are untouched) |
 | `force_downscale` | `true` — with `v_max_resolution` (any library), the Input skip gate encodes HEVC/AV1 sources larger than the cap (sets `oversize_encode`, which lets the Video flow past its `do_hevc` and AV1 skips). Off by default so libraries whose 4K copies should be kept are never downscaled |
 | `default_track_language` | Preferred language for the default-track fix: comma-separated ISO 639-1/639-2 codes (default `eng,en`; each code is expanded to its equivalents, e.g. `es` also matches `spa`). `off` disables the fix |

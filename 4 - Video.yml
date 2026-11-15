@@ -3821,7 +3821,7 @@
       "pluginName": "customFunction",
       "version": "1.0.0",
       "inputsDB": {
-        "code": "module.exports = async (args) => {\n  const streams = ((args.inputFileObj.ffProbeData || {}).streams) || [];\n  const v = streams.find((s) => s.codec_type === 'video'\n    && !(s.disposition && s.disposition.attached_pic)) || {};\n  const src = parseInt(v.bit_rate, 10) || parseInt(args.inputFileObj.bit_rate, 10) || 0;\n  const vars = args.variables || {};\n  ['480p', '576p', '720p', '1080p', '1440p', '4k', '4k_hdr'].forEach((r) => {\n    vars['cutoff_' + r] = '0';\n  });\n  if (src > 0) {\n    const cap = Math.max(300, Math.round((src * 0.85) / 1000));\n    const cur = parseInt(String(vars.bitrate_effective || '').replace(/k$/i, ''), 10) || 0;\n    if (!cur || cap < cur) {\n      vars.bitrate_effective = cap + 'k';\n      vars.maxrate_effective = cap + 'k';\n      vars.bufsize_effective = (cap * 2) + 'k';\n    }\n    args.jobLog(`Legacy source: source video ${Math.round(src / 1000)}k -> encode target ${vars.bitrate_effective} (maxrate ${vars.maxrate_effective}, bufsize ${vars.bufsize_effective}); bitrate cutoffs cleared`);\n  } else {\n    args.jobLog('Legacy source: no bitrate in ffprobe, clearing cutoffs only');\n  }\n  return { outputFileObj: args.inputFileObj, outputNumber: 1, variables: vars };\n};\n"
+        "code": "module.exports = async (args) => {\n  const streams = ((args.inputFileObj.ffProbeData || {}).streams) || [];\n  const v = streams.find((s) => s.codec_type === 'video'\n    && !(s.disposition && s.disposition.attached_pic)) || {};\n  const src = parseInt(v.bit_rate, 10) || parseInt(args.inputFileObj.bit_rate, 10) || 0;\n  const vars = args.variables || {};\n  vars.vbr_override = 'true';\n  ['480p', '576p', '720p', '1080p', '1440p', '4k', '4k_hdr'].forEach((r) => {\n    vars['cutoff_' + r] = '0';\n  });\n  if (src > 0) {\n    const cap = Math.max(300, Math.round((src * 0.85) / 1000));\n    const cur = parseInt(String(vars.bitrate_effective || '').replace(/k$/i, ''), 10) || 0;\n    if (!cur || cap < cur) {\n      vars.bitrate_effective = cap + 'k';\n      vars.maxrate_effective = cap + 'k';\n      vars.bufsize_effective = (cap * 2) + 'k';\n    }\n    args.jobLog(`Legacy source: source video ${Math.round(src / 1000)}k -> encode target ${vars.bitrate_effective} (maxrate ${vars.maxrate_effective}, bufsize ${vars.bufsize_effective}); bitrate cutoffs cleared`);\n  } else {\n    args.jobLog('Legacy source: no bitrate in ffprobe, clearing cutoffs only');\n  }\n  return { outputFileObj: args.inputFileObj, outputNumber: 1, variables: vars };\n};\n"
       },
       "id": "jFLYmYzDV",
       "position": {
@@ -3985,7 +3985,7 @@
       "pluginName": "customFunction",
       "version": "1.0.0",
       "inputsDB": {
-        "code": "module.exports = async (args) => {\n  const LOWCAP = parseFloat(((args.userVariables || {}).library || {}).low_bitrate_cap_ratio\n    || '0.9');\n  const streams = ((args.inputFileObj.ffProbeData || {}).streams) || [];\n  const v = streams.find((s) => s.codec_type === 'video'\n    && !(s.disposition && s.disposition.attached_pic)) || {};\n  const src = parseInt(v.bit_rate, 10) || parseInt(args.inputFileObj.bit_rate, 10) || 0;\n  const vars = args.variables || {};\n  ['480p', '576p', '720p', '1080p', '1440p', '4k', '4k_hdr'].forEach((r) => {\n    vars['cutoff_' + r] = '0';\n  });\n  if (src > 0) {\n    const cap = Math.max(300, Math.round((src * LOWCAP) / 1000));\n    const cur = parseInt(String(vars.bitrate_effective || '').replace(/k$/i, ''), 10) || 0;\n    if (!cur || cap < cur) {\n      vars.bitrate_effective = cap + 'k';\n      vars.maxrate_effective = cap + 'k';\n      vars.bufsize_effective = (cap * 2) + 'k';\n    }\n    args.jobLog(`Low bitrate source: ${Math.round(src / 1000)}k -> encode target ${vars.bitrate_effective} (maxrate ${vars.maxrate_effective}, bufsize ${vars.bufsize_effective}); cutoffs cleared so the VBR branch runs, not -cq`);\n  } else {\n    args.jobLog('Low bitrate source: no bitrate in ffprobe, clearing cutoffs only');\n  }\n  return { outputFileObj: args.inputFileObj, outputNumber: 1, variables: vars };\n};\n"
+        "code": "module.exports = async (args) => {\n  const LOWCAP = parseFloat(((args.userVariables || {}).library || {}).low_bitrate_cap_ratio\n    || '0.9');\n  const streams = ((args.inputFileObj.ffProbeData || {}).streams) || [];\n  const v = streams.find((s) => s.codec_type === 'video'\n    && !(s.disposition && s.disposition.attached_pic)) || {};\n  const src = parseInt(v.bit_rate, 10) || parseInt(args.inputFileObj.bit_rate, 10) || 0;\n  const vars = args.variables || {};\n  vars.vbr_override = 'true';\n  ['480p', '576p', '720p', '1080p', '1440p', '4k', '4k_hdr'].forEach((r) => {\n    vars['cutoff_' + r] = '0';\n  });\n  if (src > 0) {\n    const cap = Math.max(300, Math.round((src * LOWCAP) / 1000));\n    const cur = parseInt(String(vars.bitrate_effective || '').replace(/k$/i, ''), 10) || 0;\n    if (!cur || cap < cur) {\n      vars.bitrate_effective = cap + 'k';\n      vars.maxrate_effective = cap + 'k';\n      vars.bufsize_effective = (cap * 2) + 'k';\n    }\n    args.jobLog(`Low bitrate source: ${Math.round(src / 1000)}k -> encode target ${vars.bitrate_effective} (maxrate ${vars.maxrate_effective}, bufsize ${vars.bufsize_effective}); cutoffs cleared so the VBR branch runs, not -cq`);\n  } else {\n    args.jobLog('Low bitrate source: no bitrate in ffprobe, clearing cutoffs only');\n  }\n  return { outputFileObj: args.inputFileObj, outputNumber: 1, variables: vars };\n};\n"
       },
       "id": "lbitCap",
       "position": {
@@ -4039,6 +4039,38 @@
       "position": {
         "x": 1140,
         "y": -2420
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - CQ bitrate cap override? 🔍",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "{{{args.variables.vbr_override}}}",
+        "value": "true"
+      },
+      "id": "cqVbrChk",
+      "position": {
+        "x": 2304.8138919492308,
+        "y": 388.9283237014307
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - CQ bitrate cap override 📼",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "inputArguments": "",
+        "outputArguments": "-b:v {{{args.variables.bitrate_effective}}} -maxrate {{{args.variables.maxrate_effective}}} -bufsize {{{args.variables.bufsize_effective}}}"
+      },
+      "id": "cqVbrArgs",
+      "position": {
+        "x": 2084.8138919492308,
+        "y": 488.9283237014307
       },
       "fpEnabled": true
     }
@@ -5417,8 +5449,8 @@
       "id": "PunFchpqE"
     },
     {
-      "source": "-98IRUECY",
-      "sourceHandle": "1",
+      "source": "cqVbrChk",
+      "sourceHandle": "2",
       "target": "h_GgZQ6qp",
       "targetHandle": null,
       "id": "Zh0T6AEzQ"
@@ -6724,6 +6756,27 @@
       "target": "vxISWyoel",
       "targetHandle": null,
       "id": "avMp4Go"
+    },
+    {
+      "source": "-98IRUECY",
+      "sourceHandle": "1",
+      "target": "cqVbrChk",
+      "targetHandle": null,
+      "id": "cqVbrIn"
+    },
+    {
+      "source": "cqVbrChk",
+      "sourceHandle": "1",
+      "target": "cqVbrArgs",
+      "targetHandle": null,
+      "id": "cqVbrYes"
+    },
+    {
+      "source": "cqVbrArgs",
+      "sourceHandle": "1",
+      "target": "h_GgZQ6qp",
+      "targetHandle": null,
+      "id": "cqVbrGo"
     }
   ]
 }
