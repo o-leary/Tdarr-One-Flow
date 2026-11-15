@@ -21,7 +21,7 @@ I have a library for low quality, high quality, Animation, Movies.  Each has the
 - Strip audio to where only the tracks you want remain
 - If a lossless audio track exists, encode it in AAC (can disable, still needs refinement, as sometimes encodes high bitrate non-lossless tracks)
 - Everything leaves the pipeline as an `.mp4` with HEVC video and AAC audio, the combination that direct-plays most widely (Plex/Jellyfin, phones, smart TVs, browsers). If mp4 cannot carry something (bitmap subtitles, DTS/TrueHD audio), that file falls back to an mkv container instead; WMV/VC-1 video and WMA audio are converted to HEVC + AAC instead of being re-wrapped
-- Deinterlace .ts files. (tv DVR broadcasts)
+- .avi sources are converted too: the video is re-encoded (DivX/Xvid MPEG-4 to HEVC), the audio is stream-copied when mp4 can carry it (mp3 is), and the container becomes .mp4. `avi_encode = false` restores the old behaviour of leaving .avi files alone
 - Export Embedded Subtitles (Could use more testing and refinement)
 - Maximum output resolution (`v_max_resolution`), e.g. store 4K releases as 1080p: sources above it are downscaled, and the bitrate follows the target resolution's setting (see Maximum Resolution below)
 - Output bit depth: `v_max_bitdepth` caps it (sources at or below keep their native depth, e.g. 10-bit HDR stays 10-bit), `v_min_bitdepth` raises 8-bit sources (e.g. to 10-bit, for less banding) on files that are being encoded anyway, and `v_force_bitdepth` sets a fixed depth. HDR is never encoded below 10-bit
@@ -222,6 +222,8 @@ low_bitrate_skip_ratio = 0.9 # With save_mode = replace: skip encoding sources b
 low_bitrate_action = cap # With save_mode = replace: what to do with sources under that fraction. `cap` (default) encodes them to HEVC at `low_bitrate_cap_ratio` of their own bitrate; `skip` leaves them alone as before
 
 low_bitrate_cap_ratio = 0.9 # With `low_bitrate_action = cap`: encode at this fraction of the measured source video bitrate (300k floor, never above your target for the resolution)
+
+avi_encode = false # Optional: with save_mode = replace, go back to skipping .avi sources entirely (no encode, file stays .avi). Unset or any other value encodes them (default)
 
 force_downscale = true # With v_max_resolution: also re-encode HEVC/AV1 files larger than v_max_resolution so they get downscaled (any library, including replace mode). Leave unset to keep 4K HEVC/AV1 files as they are (default off)
 

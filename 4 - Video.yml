@@ -3993,6 +3993,54 @@
         "y": -2203.676727065127
       },
       "fpEnabled": true
+    },
+    {
+      "name": "Video - Encode AVI sources? 🔍",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "{{{args.userVariables.library.avi_encode}}}",
+        "value": "false",
+        "condition": "!="
+      },
+      "id": "avEncChk",
+      "position": {
+        "x": 1090,
+        "y": -3200
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - ASF/AVI container? 🔍",
+      "sourceRepo": "Community",
+      "pluginName": "checkFileExtension",
+      "version": "1.0.0",
+      "inputsDB": {
+        "extensions": "avi"
+      },
+      "id": "avChk1",
+      "position": {
+        "x": 1290,
+        "y": -2490
+      },
+      "fpEnabled": true
+    },
+    {
+      "name": "Video - AVI/ASF to MP4 container 📼",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandSetContainer",
+      "version": "1.0.0",
+      "inputsDB": {
+        "container": "mp4",
+        "forceConform": "false"
+      },
+      "id": "avMp4",
+      "position": {
+        "x": 1140,
+        "y": -2420
+      },
+      "fpEnabled": true
     }
   ],
   "flowEdges": [
@@ -6372,7 +6420,7 @@
     {
       "source": "03jasauy1",
       "sourceHandle": "1",
-      "target": "vxISWyoel",
+      "target": "avChk1",
       "targetHandle": null,
       "id": "eBitDepth1"
     },
@@ -6575,7 +6623,7 @@
     {
       "source": "lgcyAviChk",
       "sourceHandle": "2",
-      "target": "whLxoif7t",
+      "target": "avEncChk",
       "targetHandle": null,
       "id": "lgcyAviNo"
     },
@@ -6641,6 +6689,41 @@
       "target": "rBitDepth1",
       "targetHandle": null,
       "id": "lbitCap1"
+    },
+    {
+      "source": "avEncChk",
+      "sourceHandle": "2",
+      "target": "whLxoif7t",
+      "targetHandle": null,
+      "id": "avEncNo"
+    },
+    {
+      "source": "avEncChk",
+      "sourceHandle": "1",
+      "target": "mZGhkFE_A",
+      "targetHandle": null,
+      "id": "avEncYes"
+    },
+    {
+      "source": "avChk1",
+      "sourceHandle": "2",
+      "target": "vxISWyoel",
+      "targetHandle": null,
+      "id": "avChkNo"
+    },
+    {
+      "source": "avChk1",
+      "sourceHandle": "1",
+      "target": "avMp4",
+      "targetHandle": null,
+      "id": "avChkYes"
+    },
+    {
+      "source": "avMp4",
+      "sourceHandle": "1",
+      "target": "vxISWyoel",
+      "targetHandle": null,
+      "id": "avMp4Go"
     }
   ]
 }
