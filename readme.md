@@ -1,5 +1,46 @@
 ## Tdarr - One Flow - To Rule Them All
 
+### What this fork adds over upstream
+
+Bold names are library variables this fork introduces; leaving them unset keeps
+upstream behaviour.
+
+- **Legacy sources.** `.wmv` / `.asf` / `.wma` files, and sources whose codecs
+  MP4 cannot carry (VC-1/WMV3 video, WMA/RealAudio/Sipro audio), are converted
+  instead of being left alone: video is stream-copied when it is already
+  MP4-safe and re-encoded otherwise, at a bitrate capped to the source, with the
+  audio normalised to AAC at a size derived from its own bitrate.
+- **`.avi` sources are converted** (DivX/Xvid to HEVC, audio stream-copied when
+  the container can carry it, container conformed) rather than ending the video
+  flow early. `avi_encode = false` restores the old skip.
+- **Output container.** Everything leaves as `.mp4` with HEVC video and AAC
+  audio, falling back to mkv when mp4 cannot carry a stream. `convert_mkv = true`
+  writes `.mkv` instead, and `rewrap_container` adds a copy-only rewrap
+  (`-c copy`, no re-encode, under a second per file) for files that are already
+  HEVC/AV1 in the wrong container, so an existing library can be migrated to the
+  other container without another generation of quality loss.
+- **Bitrate caps.** A source below its resolution tier's target is encoded at a
+  cap derived from its own bitrate (`low_bitrate_cap_ratio`, default 0.9)
+  instead of being skipped; `low_bitrate_action = skip` gets the skip back and
+  `cq_fallback_cap_ratio` sets the band the cap covers. The cap is also applied
+  on the `-cq` fallback path by appending rate-control arguments after the
+  quality flags - encoder-agnostic - so a file can no longer leave CQ encoding
+  larger than it went in.
+- **Bitrate tier** falls back to the frame height when the recorded resolution
+  label is unknown (`240p`, empty), using the same ladder as the maximum
+  resolution pass, and the caps run after that pass so the tier they lower is the
+  one the encode will use.
+- **Duration bounds per file** (`duration_slack_seconds`, `duration_slack_ratio`,
+  `duration_slack_max_ratio`) so honest transcodes of containers whose header
+  understates their own stream duration are not sent for review, while real
+  truncation is still caught.
+- **Live size check disabled on copy and capped paths**, so a valid encode is not
+  cancelled part-way and the file is never left untouched at 100%; the final size
+  check still applies to every file.
+- **Audio and stream hygiene.** PCM/lossless audio tracks are encoded where they
+  used to be carried through, data streams are guarded per ffmpeg stage, and the
+  default-track fixups run in place with mkvpropedit instead of forcing a remux.
+
 Goal to have One Flow (set of flows) to Rule all your Media!
 
 I accomplish this by using Library Variables.  This allows us to change our quality and encoding settings in the library.  This is much easier than trying to edit the flow every time we want to encode differently.
