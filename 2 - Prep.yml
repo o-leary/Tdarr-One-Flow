@@ -1182,12 +1182,12 @@
       "fpEnabled": true
     },
     {
-      "name": "Prep & Clean - Set Container MP4 (Default) 📼",
+      "name": "Prep & Clean - Set Output Container (Default) 📼",
       "sourceRepo": "Community",
       "pluginName": "ffmpegCommandSetContainer",
       "version": "1.0.0",
       "inputsDB": {
-        "container": "mp4",
+        "container": "{{{args.variables.user.out_container}}}",
         "forceConform": "false"
       },
       "id": "mqGBwbA97",

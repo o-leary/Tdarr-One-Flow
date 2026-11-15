@@ -1185,6 +1185,26 @@
         "y": 567.1612792326722
       },
       "fpEnabled": true
+    },
+    {
+      "name": "Input - Set Output Container 🧮",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n\n  const lib = ((args.userVariables || {}).library) || {};\n  const vars = args.variables || {};\n  vars.user = vars.user || {};\n  const raw = lib.convert_mkv === undefined ? '' : String(lib.convert_mkv);\n  const wanted = raw.trim().toLowerCase();\n  vars.user.out_container = ['true', '1', 'mkv', 'yes'].includes(wanted) ? 'mkv' : 'mp4';\n  args.jobLog(`Output container: ${vars.user.out_container} (library variable convert_mkv = ${raw.trim() || 'unset'})`);\n  return {\n    outputFileObj: args.inputFileObj,\n    outputNumber: 1,\n    variables: vars,\n  };\n};"
+      },
+      "id": "outCVar01",
+      "position": {
+        "x": 913.0,
+        "y": -1620.0
+      },
+      "fpEnabled": true,
+      "positionAbsolute": {
+        "x": 913.0,
+        "y": -1620.0
+      },
+      "selected": false
     }
   ],
   "flowEdges": [
@@ -1814,7 +1834,7 @@
     {
       "source": "rplcGate01",
       "sourceHandle": "1",
-      "target": "EOKWqH2pd",
+      "target": "outCVar01",
       "targetHandle": null,
       "id": "rplcGateE1"
     },
@@ -1845,6 +1865,13 @@
       "target": "gidO9thTZ",
       "targetHandle": null,
       "id": "kFwJxJ6aG"
+    },
+    {
+      "source": "outCVar01",
+      "sourceHandle": "1",
+      "target": "EOKWqH2pd",
+      "targetHandle": null,
+      "id": "eMkvVar1"
     }
   ]
 }

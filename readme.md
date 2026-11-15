@@ -231,6 +231,8 @@ duration_slack_seconds = 5 # Optional: extra duration drift the save checks allo
 
 duration_slack_ratio = 0.01 # Optional: same allowance as a fraction of the original duration (default 1%)
 
+convert_mkv = true # Optional: write .mkv instead of .mp4. Set once in '1 - Input' (Input - Set Output Container), and the container nodes in flows 2 and 4 all follow it. Anything other than true/mkv/1/yes leaves the output as .mp4. Existing HEVC files are still skipped, so this only affects files the flow actually converts; subtitles and default-track fixups already handle mkv
+
 duration_slack_max_ratio = 0.05 # Optional: how far the allowance may stretch, as a fraction of the original duration (default 5%) - real faults are still caught
 
 force_downscale = true # With v_max_resolution: also re-encode HEVC/AV1 files larger than v_max_resolution so they get downscaled (any library, including replace mode). Leave unset to keep 4K HEVC/AV1 files as they are (default off)

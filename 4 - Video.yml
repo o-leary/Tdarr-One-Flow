@@ -3769,12 +3769,12 @@
       "fpEnabled": true
     },
     {
-      "name": "Video - Legacy source - Set Container MP4 📼",
+      "name": "Video - Legacy source - Set Output Container 📼",
       "sourceRepo": "Community",
       "pluginName": "ffmpegCommandSetContainer",
       "version": "1.0.0",
       "inputsDB": {
-        "container": "mp4",
+        "container": "{{{args.variables.user.out_container}}}",
         "forceConform": "false"
       },
       "id": "WX_Ajnh7O",
@@ -4027,12 +4027,12 @@
       "fpEnabled": true
     },
     {
-      "name": "Video - AVI/ASF to MP4 container 📼",
+      "name": "Video - AVI/ASF container conform 📼",
       "sourceRepo": "Community",
       "pluginName": "ffmpegCommandSetContainer",
       "version": "1.0.0",
       "inputsDB": {
-        "container": "mp4",
+        "container": "{{{args.variables.user.out_container}}}",
         "forceConform": "false"
       },
       "id": "avMp4",
